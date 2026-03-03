@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>RefStation</title>
+  <style>
+    .hidden { display: none !important; }
+    body { margin: 0; background: #0b1020; overflow: hidden; }
+  </style>
+  <link rel="stylesheet" href="assets/css/app.css" />
+</head>
+<body>
+
+  <!-- Ambient gradient glow layer -->
+  <div class="bg-aurora" aria-hidden="true"></div>
+
+  <!-- Background artwork -->
+  <img id="artwork" src="" alt="" />
+
+  <!-- Top gradient veil -->
+  <div class="top-veil" aria-hidden="true"></div>
+
+  <!-- Image counter for multi-image projects -->
+  <div class="image-counter hidden" id="image-counter">
+    <button id="img-prev" title="Previous image">&#8249;</button>
+    <span id="img-index">1 / 1</span>
+    <button id="img-next" title="Next image">&#8250;</button>
+  </div>
+
+  <!-- Header -->
+  <header class="ui" id="header">
+    <div id="credits" class="glass-card credits-card">
+      <h1 id="artwork-name"></h1>
+      <h3 id="author-name"></h3>
+    </div>
+
+    <div class="header-right">
+      <div class="clock-wrap glass-card">
+        <div id="clock">00:00</div>
+        <div id="date"></div>
+      </div>
+
+      <div class="logo glass-card">
+        <a href="https://www.artstation.com" target="_blank">
+          <img src="assets/img/logo.png" alt="ArtStation" />
+        </a>
+        <span class="offline-label hidden">offline</span>
+      </div>
+      <button class="ui" id="settings-btn" title="Settings" aria-label="Open settings">&#9881;</button>
+      <span id="pin-indicator" class="hidden glass-pill">📌 Pinned</span>
+    </div>
+  </header>
+
+  <!-- Action buttons -->
+  <div class="action-buttons ui" id="action-buttons">
+    <button id="favorite-btn" title="Save to favorites" aria-label="Save to favorites">&#9825;</button>
+    <button id="download-btn" title="Download artwork" aria-label="Download artwork">&#8681;</button>
+    <button id="open-btn" title="Open in ArtStation" aria-label="Open in ArtStation">&#8599;</button>
+    <button id="note-btn" title="Add study note" aria-label="Add study note">&#9998;</button>
+    <button id="pin-btn" title="Pin current artwork (P)" aria-label="Pin current artwork">📌</button>
+  </div>
+
+  <!-- Settings -->
+  
+
+  <!-- Gesture timer -->
+  <div class="gesture-timer hidden" id="gesture-timer">
+    <span id="gesture-countdown">0:30</span>
+    <span id="gesture-label">Gesture</span>
+  </div>
+
+  <!-- Prev / Next -->
+  <nav class="prev-next ui">
+    <button id="prev-btn" title="Previous" aria-label="Previous artwork">&#8592;</button>
+    <button id="next-btn" title="Next" aria-label="Next artwork">&#8594;</button>
+  </nav>
+
+  <!-- Autoplay -->
+  <div class="autoplay-wrap hidden" id="autoplay-wrap">
+    <button id="autoplay-btn" title="Pause autoplay" aria-label="Pause autoplay">
+      <svg viewBox="0 0 36 36" class="autoplay-ring">
+        <circle class="ring-bg" cx="18" cy="18" r="16"/>
+        <circle class="ring-progress" id="ring-progress" cx="18" cy="18" r="16"/>
+      </svg>
+      <span class="autoplay-icon" id="autoplay-icon">&#9646;&#9646;</span>
+    </button>
+  </div>
+
+  <!-- Left action shortcuts -->
+  <button class="ui" id="history-open-btn" title="History (H)" aria-label="Open history">&#128336;</button>
+  <button class="ui" id="favorites-open-btn" title="Favorites (V)" aria-label="Open favorites">&#9829;</button>
+
+  <!-- History drawer -->
+  <div class="history-container hidden" id="history-container">
+    <div class="history-header">
+      <button class="history-nav" id="history-prev" title="Previous page">&#8592;</button>
+      <span class="history-title">History</span>
+      <button class="history-close" id="history-close" title="Close">&#8595;</button>
+      <button class="history-nav" id="history-next" title="Next page">&#8594;</button>
+    </div>
+    <div class="history-items" id="history-items"></div>
+  </div>
+
+  <!-- Favorites drawer -->
+  <div class="history-container hidden" id="favorites-container">
+    <div class="history-header">
+      <button class="history-nav" id="fav-prev" title="Previous page">&#8592;</button>
+      <span class="history-title">♥ Favorites</span>
+      <button class="history-close" id="favorites-close" title="Close">&#8595;</button>
+      <button class="history-nav" id="fav-next" title="Next page">&#8594;</button>
+    </div>
+    <div class="history-items" id="favorites-items"></div>
+  </div>
+
+  <!-- Study note panel -->
+  <div class="note-panel hidden" id="note-panel">
+    <div class="note-header">
+      <span>Study Note</span>
+      <button id="note-close" aria-label="Close note">&times;</button>
+    </div>
+    <textarea id="note-textarea" placeholder="Write your observations about this artwork..."></textarea>
+    <div class="note-footer">
+      <button id="note-save" class="btn-primary">Save Note</button>
+      <button id="note-delete" class="btn-secondary">Delete</button>
+    </div>
+  </div>
+
+  <!-- Settings modal -->
+  <div class="modal-overlay hidden" id="settings-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Settings</h3>
+        <button id="modal-close" aria-label="Close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <label>
+          Medium
+          <select id="medium-select"><option value="">All Media</option></select>
+        </label>
+        <label>
+          Subject Matter
+          <select id="category-select"><option value="">All Subject Matter</option></select>
+        </label>
+
+        <hr />
+
+        <label class="checkbox-label">
+          <input type="checkbox" id="autoplay-checkbox" />
+          Enable Autoplay
+        </label>
+        <label id="duration-label" class="hidden">
+          Duration (seconds, min 5)
+          <input type="number" id="duration-input" min="5" value="10" />
+          <span class="field-error hidden" id="duration-error">Please use a number higher than 5</span>
+        </label>
+
+        <hr />
+
+        <label class="section-label">Gesture Drawing Timer</label>
+        <label class="checkbox-label">
+          <input type="checkbox" id="gesture-checkbox" />
+          Enable Gesture Timer
+        </label>
+        <label id="gesture-duration-label" class="hidden">
+          Time per image
+          <select id="gesture-duration-select">
+            <option value="30">30 seconds</option>
+            <option value="60">1 minute</option>
+            <option value="120">2 minutes</option>
+            <option value="300">5 minutes</option>
+            <option value="600">10 minutes</option>
+          </select>
+        </label>
+
+        <hr />
+
+        <label class="section-label">Data</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button id="export-btn" class="btn-secondary" type="button">Export Data</button>
+          <button id="import-btn" class="btn-secondary" type="button">Import Data</button>
+          <input id="import-file" type="file" accept="application/json" class="hidden" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="modal-reset" class="btn-secondary">Reset Filters</button>
+        <button id="modal-save" class="btn-primary">Save &amp; Reload</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toasts -->
+  <div class="toast error hidden" id="error-toast">
+    <strong>Sorry</strong> — couldn't load artwork. Retrying with offline fallback.
+  </div>
+  <div class="toast success hidden" id="note-toast">
+    &#10003; Note saved!
+  </div>
+
+  <!-- No-results modal -->
+  <div class="modal-overlay hidden" id="no-results-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>No Results</h3>
+        <button id="no-results-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        No images found with these filters. Please reset and try again.
+      </div>
+      <div class="modal-footer">
+        <button id="no-results-ok" class="btn-primary">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="assets/js/app.js"></script>
+</body>
+</html>
