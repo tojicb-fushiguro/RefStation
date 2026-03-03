@@ -1,1 +1,5 @@
+/**
+ * RefStation
+ * Author: tojicb-fushiguro
+ */
 chrome.action.onClicked.addListener(function(a){chrome.tabs.update(a.id,{url:"https://www.artstation.com"})});
