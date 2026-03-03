@@ -17,6 +17,7 @@ It blends a beautiful full-screen art viewer with practical tools like favorites
 - 📴 **Offline fallback support**
 - 💾 **Export/Import your full data**
 - ⌨️ **Keyboard shortcut-driven UX**
+<img width="1919" height="952" alt="image" src="https://github.com/user-attachments/assets/d7046e70-c300-4b54-857a-e3f45aba857f" />
 
 ---
 
