@@ -96,7 +96,9 @@ RefStation/
 - HTML + CSS (custom glassmorphism UI)
 - `chrome.storage.local` with browser fallback
 - ArtStation API endpoints for random projects and filter metadata
+<img width="465" height="615" alt="image" src="https://github.com/user-attachments/assets/4b65f143-17bf-47a4-8be0-1a7f71cfa2f2" />
 
+Discover your Flow State
 ---
 
 ## ⌨️ Keyboard Shortcuts
