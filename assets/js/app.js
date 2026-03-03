@@ -1,4 +1,8 @@
 /**
+ * RefStation
+ * Author: tojicb-fushiguro
+ */
+/**
  * app.js — entry point
  */
 import { fetchRandomProject, fetchOfflineProject, getProjectImages } from './api.js';
@@ -288,5 +292,6 @@ function initKeyboardShortcuts() {
     if (k === 's') return EL.settingsBtn?.click();
   });
 }
+
 
 document.addEventListener('DOMContentLoaded', init);
