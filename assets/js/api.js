@@ -1,4 +1,8 @@
 /**
+ * RefStation
+ * Author: tojicb-fushiguro
+ */
+/**
  * api.js — fetch artwork from ArtStation; offline fallback.
  */
 
@@ -108,4 +112,5 @@ function normaliseOfflineItem(item, index) {
     },
     offline: true,
   };
+
 }
