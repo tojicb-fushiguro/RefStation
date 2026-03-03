@@ -1,4 +1,8 @@
 /**
+ * RefStation
+ * Author: tojicb-fushiguro
+ */
+/**
  * ui.js — DOM rendering and event handlers
  */
 import { fetchFilterOptions } from './api.js';
@@ -400,4 +404,5 @@ export function initClickOutside() {
 
 function esc(str) {
   return String(str ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
 }
