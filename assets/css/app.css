@@ -1,3 +1,8 @@
+/* 
+ * RefStation
+ * Author: tojicb-fushiguro
+ */
+...
 /* ── Bright Creative Remaster ─────────────────────────────────────────────── */
 *,
 *::before,
@@ -715,4 +720,5 @@ html, body {
 /* Improve arrow + contrast in some Chromium builds */
 .modal-body select {
   color-scheme: dark;
+
 }
