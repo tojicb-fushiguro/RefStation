@@ -18,8 +18,8 @@ It blends a beautiful full-screen art viewer with practical tools like favorites
 - 💾 **Export/Import your full data**
 - ⌨️ **Keyboard shortcut-driven UX**
 <img width="1919" height="1032" alt="image" src="https://github.com/user-attachments/assets/5c3389f9-c5ef-4ffd-96b4-b73d9e93bf35" />
-<img width="568" height="701" alt="image" src="https://github.com/user-attachments/assets/2f2ddde0-95bf-4fca-8546-bb949483ee30" />
-Add specific notes for specific picture
+<img width="568" height="701" alt="image" src="https://github.com/user-attachments/assets/2f2ddde0-95bf-4fca-8546-bb949483ee30" />Add specific notes for specific picture
+
 
 ---
 
