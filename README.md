@@ -63,6 +63,8 @@ Add specific notes for specific picture
   - history
   - settings
   - pinned artwork
+<img width="1919" height="187" alt="image" src="https://github.com/user-attachments/assets/fb5b29ea-7f2b-4dae-9999-14729a489c56" />
+<img width="1919" height="202" alt="image" src="https://github.com/user-attachments/assets/cbcbbc46-e40e-42aa-bab6-e517a62990bd" />
 
 ---
 
