@@ -1,4 +1,8 @@
 /**
+ * RefStation
+ * Author: tojicb-fushiguro
+ */
+/**
  * state.js — storage, history, settings, favorites, notes, pin, import/export
  */
 
@@ -189,4 +193,5 @@ export async function importAllDataReplace(payload) {
     gesture_duration: payload.settings?.gesture_duration ?? 30,
     pinned_artwork: payload.pinnedArtwork || null
   });
+
 }
