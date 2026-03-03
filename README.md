@@ -171,23 +171,17 @@ However, the **implementation/code in this repository is fully my own**, with ma
 
 ---
 
-## 📄 License
+## 📜 License & Legal
+This project is currently unlicensed and provided for personal use only.
 
-License is **currently not specified**.
+**Inspiration & Origin:** 
+RefStation was built as a power-user reimagining of the ArtStation Discover extension. While the *concept* of a "New Tab" artwork feed is inspired by the original plugin, the **entire implementation, UI, and specialized feature set** (Gesture Timers, Playlists, Keyboard Workflow) are original works.
 
-This project is heavily inspired by the ArtStation Discover extension concept, while the implementation and additional features are original.
-
-If you are the owner of any related concept/assets and have concerns, please open an issue.
-
-I have no intention to ship or market this product.
-
----
+**Notice to Rights Holders:**
+I have no intention to ship, market, or monetize this product. If you are the owner of any related concepts or assets and have concerns, please open an issue and I will address it immediately.
 
 ## 🙌 Credits
-
-- Artwork content from **ArtStation**
-- Built by **tojicb-fushiguro**
-
----
+* **Artstation:** For the incredible community of artists and content.
+* **Built by:** [tojicb-fushiguro](https://github.com)
 
 **RefStation** = daily inspiration + learning flow + better new tabs 🚀
