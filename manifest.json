@@ -2,6 +2,7 @@
   "manifest_version": 3,
   "name": "RefStation",
   "version": "1.4",
+  "author": "tojicb-fushiguro",
   "description": "Curated reference images from Artstation in your new tabs.",
   "action": {
     "default_icon": "assets/img/icon.png",
@@ -35,4 +36,5 @@
       "matches": ["<all_urls>"]
     }
   ]
+
 }
