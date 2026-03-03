@@ -179,6 +179,8 @@ This project is heavily inspired by the ArtStation Discover extension concept, w
 
 If you are the owner of any related concept/assets and have concerns, please open an issue.
 
+I have no intention to ship or market this product.
+
 ---
 
 ## 🙌 Credits
