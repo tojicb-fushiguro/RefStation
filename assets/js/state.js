@@ -1,8 +1,4 @@
 /**
- * RefStation
- * Author: tojicb-fushiguro
- */
-/**
  * state.js — storage, history, settings, favorites, notes, pin, import/export
  */
 
@@ -86,10 +82,10 @@ export async function addToHistory(project) {
   await storageSet({ history: list });
 }
 
-export async function getHistoryPage(startIndex) {
+export async function getHistoryPage(startIndex, pageSize = PAGE_SIZE) {
   const list = await getHistory();
   const start = Math.max(0, startIndex);
-  return { items: list.slice(start, start + PAGE_SIZE), total: list.length, start };
+  return { items: list.slice(start, start + pageSize), total: list.length, start };
 }
 
 export async function getFavorites() {
@@ -117,10 +113,10 @@ export async function isFavorite(hashId) {
   return list.some(p => p.hash_id === hashId);
 }
 
-export async function getFavoritesPage(startIndex) {
+export async function getFavoritesPage(startIndex, pageSize = PAGE_SIZE) {
   const list = await getFavorites();
   const start = Math.max(0, startIndex);
-  return { items: list.slice(start, start + PAGE_SIZE), total: list.length, start };
+  return { items: list.slice(start, start + pageSize), total: list.length, start };
 }
 
 export async function getNotes() {
@@ -139,6 +135,32 @@ export async function saveNote(hashId, text) {
 export async function getNote(hashId) {
   const notes = await getNotes();
   return notes[hashId] || '';
+}
+
+export async function getNoteHistoryProjects() {
+  const [notes, history, favorites, pinned] = await Promise.all([
+    getNotes(),
+    getHistory(),
+    getFavorites(),
+    getPinnedArtwork()
+  ]);
+
+  const noteIds = new Set(Object.keys(notes).filter(key => String(notes[key] || '').trim()));
+  const seen = new Set();
+  const projects = [];
+
+  const addProject = (project) => {
+    const hashId = project?.hash_id;
+    if (!hashId || !noteIds.has(hashId) || seen.has(hashId)) return;
+    seen.add(hashId);
+    projects.push(project);
+  };
+
+  if (pinned) addProject(pinned);
+  favorites.forEach(addProject);
+  history.forEach(addProject);
+
+  return projects;
 }
 
 export async function nextOfflineIndex(total) {
@@ -193,5 +215,4 @@ export async function importAllDataReplace(payload) {
     gesture_duration: payload.settings?.gesture_duration ?? 30,
     pinned_artwork: payload.pinnedArtwork || null
   });
-
 }
