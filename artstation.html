@@ -1,7 +1,3 @@
-<!--
-  RefStation
-  Author: tojicb-fushiguro
--->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -92,8 +88,10 @@
   </div>
 
   <!-- Left action shortcuts -->
-  <button class="ui" id="history-open-btn" title="History (H)" aria-label="Open history">&#128336;</button>
-  <button class="ui" id="favorites-open-btn" title="Favorites (V)" aria-label="Open favorites">&#9829;</button>
+  <div class="left-rail ui" aria-label="Quick library actions">
+    <button id="favorites-open-btn" title="Favorites (V)" aria-label="Open favorites">&#9829;</button>
+    <button id="history-open-btn" title="History (H)" aria-label="Open history">&#128336;</button>
+  </div>
 
   <!-- History drawer -->
   <div class="history-container hidden" id="history-container">
@@ -121,13 +119,24 @@
   <div class="note-panel hidden" id="note-panel">
     <div class="note-header">
       <span>Study Note</span>
-      <button id="note-close" aria-label="Close note">&times;</button>
+      <div class="note-header-actions">
+        <button id="note-history-btn" class="note-history-btn" type="button" title="Note History" aria-label="Open note history">&#128214;</button>
+        <button id="note-close" aria-label="Close note">&times;</button>
+      </div>
     </div>
     <textarea id="note-textarea" placeholder="Write your observations about this artwork..."></textarea>
     <div class="note-footer">
       <button id="note-save" class="btn-primary">Save Note</button>
       <button id="note-delete" class="btn-secondary">Delete</button>
     </div>
+  </div>
+
+  <div class="note-history-panel hidden" id="note-history-panel">
+    <div class="note-history-header">
+      <span>Note History</span>
+      <button id="note-history-close" aria-label="Close note history">&times;</button>
+    </div>
+    <div class="note-history-items" id="note-history-items"></div>
   </div>
 
   <!-- Settings modal -->
@@ -219,5 +228,4 @@
 
   <script type="module" src="assets/js/app.js"></script>
 </body>
-
 </html>
