@@ -1,16 +1,12 @@
 /**
- * RefStation
- * Author: tojicb-fushiguro
- */
-/**
  * ui.js — DOM rendering and event handlers
  */
 import { fetchFilterOptions } from './api.js';
 import {
   loadSettings, saveSettings, resetFilters,
-  getHistory, getHistoryPage, PAGE_SIZE,
-  getFavoritesPage, removeFavorite,
-  getNote, saveNote,
+  getHistory, PAGE_SIZE,
+  getFavorites, removeFavorite,
+  getNote, saveNote, getNoteHistoryProjects,
   exportAllData, importAllDataReplace
 } from './state.js';
 
@@ -65,6 +61,10 @@ export const EL = {
   favClose: $('favorites-close'),
 
   notePanel: $('note-panel'),
+  noteHistoryBtn: $('note-history-btn'),
+  noteHistoryPanel: $('note-history-panel'),
+  noteHistoryClose: $('note-history-close'),
+  noteHistoryItems: $('note-history-items'),
   noteClose: $('note-close'),
   noteTextarea: $('note-textarea'),
   noteSave: $('note-save'),
@@ -95,9 +95,132 @@ export const EL = {
 };
 
 let currentNoteHashId = null;
-let historyPageStart = 0;
-let favPageStart = 0;
+let currentNoteHistoryItems = [];
 let errorTimer = null, noteTimer = null, downloadTimer = null;
+let suppressDrawerClick = false;
+
+function getDrawerStep(container) {
+  const firstCard = container.querySelector('.history-item:not(.empty)');
+  if (!firstCard) return 140;
+  const styles = getComputedStyle(container);
+  const gap = parseFloat(styles.columnGap || styles.gap || '12') || 12;
+  return firstCard.getBoundingClientRect().width + gap;
+}
+
+function updateDrawerNavButtons(container, prevBtn, nextBtn) {
+  const maxScroll = Math.max(0, container.scrollWidth - container.clientWidth);
+  prevBtn.disabled = container.scrollLeft <= 2;
+  nextBtn.disabled = container.scrollLeft >= maxScroll - 2;
+}
+
+function scrollDrawerBy(container, delta) {
+  container.scrollBy({ left: delta, behavior: 'smooth' });
+}
+
+function bindDrawerSwipe(container, handlers) {
+  const state = {
+    pointerId: null,
+    startX: 0,
+    startScrollLeft: 0,
+    lastX: 0,
+    lastTime: 0,
+    velocityX: 0,
+    animationFrame: 0,
+    dragging: false,
+    moved: false,
+    tapTarget: null,
+  };
+  const dragMultiplier = 2.1;
+  const velocitySmoothing = 0.78;
+  const momentumBoost = 30;
+  const friction = 0.915;
+  const minVelocity = 0.015;
+  const dragThreshold = 12;
+
+  const stopMomentum = () => {
+    if (state.animationFrame) cancelAnimationFrame(state.animationFrame);
+    state.animationFrame = 0;
+  };
+
+  const startMomentum = () => {
+    stopMomentum();
+    const tick = () => {
+      state.velocityX *= friction;
+      if (Math.abs(state.velocityX) < minVelocity) {
+        state.velocityX = 0;
+        state.animationFrame = 0;
+        handlers.onScroll?.();
+        return;
+      }
+
+      container.scrollLeft -= state.velocityX * momentumBoost;
+      handlers.onScroll?.();
+      state.animationFrame = requestAnimationFrame(tick);
+    };
+
+    state.animationFrame = requestAnimationFrame(tick);
+  };
+
+  const reset = () => {
+    state.pointerId = null;
+    state.dragging = false;
+    state.moved = false;
+    state.tapTarget = null;
+    container.style.cursor = '';
+  };
+
+  container.addEventListener('pointerdown', (e) => {
+    if (e.button !== 0) return;
+    state.pointerId = e.pointerId;
+    state.startX = e.clientX;
+    state.startScrollLeft = container.scrollLeft;
+    state.lastX = e.clientX;
+    state.lastTime = performance.now();
+    state.velocityX = 0;
+    state.moved = false;
+    state.tapTarget = e.target.closest('.history-item[data-id], .fav-remove');
+    stopMomentum();
+    state.dragging = true;
+    suppressDrawerClick = false;
+    container.style.cursor = 'grabbing';
+    container.setPointerCapture?.(e.pointerId);
+  });
+
+  container.addEventListener('pointermove', (e) => {
+    if (!state.dragging || state.pointerId !== e.pointerId) return;
+    const now = performance.now();
+    const deltaX = e.clientX - state.startX;
+    if (Math.abs(deltaX) > dragThreshold) {
+      suppressDrawerClick = true;
+      state.moved = true;
+    }
+    container.scrollLeft = state.startScrollLeft - (deltaX * dragMultiplier);
+    const dt = Math.max(1, now - state.lastTime);
+    const dx = e.clientX - state.lastX;
+    const instantVelocity = dx / dt;
+    state.velocityX = (state.velocityX * velocitySmoothing) + (instantVelocity * (1 - velocitySmoothing));
+    state.lastX = e.clientX;
+    state.lastTime = now;
+    handlers.onScroll?.();
+  });
+
+  const finish = (e) => {
+    if (state.pointerId !== null && e.pointerId !== undefined && state.pointerId !== e.pointerId) return;
+    if (state.pointerId !== null && e.pointerId !== undefined) container.releasePointerCapture?.(e.pointerId);
+    if (!state.moved) {
+      handlers.onTap?.(state.tapTarget, e);
+    } else if (Math.abs(state.velocityX) > minVelocity) {
+      startMomentum();
+    }
+    reset();
+    setTimeout(() => { suppressDrawerClick = false; }, 0);
+  };
+
+  container.addEventListener('pointerup', finish);
+  container.addEventListener('pointercancel', finish);
+  container.addEventListener('lostpointercapture', reset);
+  container.addEventListener('dragstart', (e) => e.preventDefault());
+}
 
 export function startClock() {
   const tick = () => {
@@ -141,39 +264,34 @@ export function updateImageCounter(current, total) {
 }
 
 export async function renderHistoryPage() {
-  const { items, total, start } = await getHistoryPage(historyPageStart);
-  EL.historyPrev.disabled = start <= 0;
-  EL.historyNext.disabled = start + PAGE_SIZE >= total;
-  EL.historyItems.innerHTML = Array.from({ length: PAGE_SIZE }, (_, i) => {
-    const item = items[i];
-    if (!item) return `<div class="history-item empty"></div>`;
-    return `<div class="history-item" data-id="${esc(item.hash_id)}"><img class="thumb" src="${esc(item.cover?.smaller_square_image_url || '')}" alt=""><div class="info"><div class="title">${esc(item.title)}</div><div class="name">${esc(item.user?.full_name || '')}</div></div></div>`;
-  }).join('');
+  const items = await getHistory();
+  EL.historyItems.innerHTML = items.map(item =>
+    `<div class="history-item" data-id="${esc(item.hash_id)}"><img class="thumb" src="${esc(item.cover?.smaller_square_image_url || '')}" alt=""><div class="info"><div class="title">${esc(item.title)}</div><div class="name">${esc(item.user?.full_name || '')}</div></div></div>`
+  ).join('');
+  updateDrawerNavButtons(EL.historyItems, EL.historyPrev, EL.historyNext);
 }
 
 export async function renderFavoritesPage() {
-  const { items, total, start } = await getFavoritesPage(favPageStart);
-  EL.favPrev.disabled = start <= 0;
-  EL.favNext.disabled = start + PAGE_SIZE >= total;
-  EL.favItems.innerHTML = Array.from({ length: PAGE_SIZE }, (_, i) => {
-    const item = items[i];
-    if (!item) return `<div class="history-item empty"></div>`;
-    return `<div class="history-item" data-id="${esc(item.hash_id)}"><img class="thumb" src="${esc(item.cover?.smaller_square_image_url || '')}" alt=""><div class="info"><div class="title">${esc(item.title)}</div><div class="name">${esc(item.user?.full_name || '')}</div></div><button class="fav-remove" data-id="${esc(item.hash_id)}">&#10005; Remove</button></div>`;
-  }).join('');
+  const items = await getFavorites();
+  EL.favItems.innerHTML = items.map(item =>
+    `<div class="history-item" data-id="${esc(item.hash_id)}"><img class="thumb" src="${esc(item.cover?.smaller_square_image_url || '')}" alt=""><div class="info"><div class="title">${esc(item.title)}</div><div class="name">${esc(item.user?.full_name || '')}</div></div><button class="fav-remove" data-id="${esc(item.hash_id)}">&#10005; Remove</button></div>`
+  ).join('');
+  updateDrawerNavButtons(EL.favItems, EL.favPrev, EL.favNext);
 }
 
 export async function openHistoryDrawer() {
   EL.favContainer.classList.remove('open');
   EL.favContainer.classList.add('hidden');
 
-  const history = await getHistory();
-  historyPageStart = Math.max(0, history.length - PAGE_SIZE);
-
   EL.historyContainer.classList.remove('hidden');
   requestAnimationFrame(() => {
     requestAnimationFrame(() => EL.historyContainer.classList.add('open'));
   });
-  renderHistoryPage();
+  await renderHistoryPage();
+  requestAnimationFrame(() => {
+    EL.historyItems.scrollLeft = Math.max(0, EL.historyItems.scrollWidth - EL.historyItems.clientWidth);
+    updateDrawerNavButtons(EL.historyItems, EL.historyPrev, EL.historyNext);
+  });
 }
 
 export function closeHistoryDrawer() { EL.historyContainer.classList.remove('open'); setTimeout(() => !EL.historyContainer.classList.contains('open') && EL.historyContainer.classList.add('hidden'), 350); }
@@ -182,14 +300,15 @@ export async function openFavoritesDrawer() {
   EL.historyContainer.classList.remove('open');
   EL.historyContainer.classList.add('hidden');
 
-  const { total } = await getFavoritesPage(0);
-  favPageStart = Math.max(0, total - PAGE_SIZE);
-
   EL.favContainer.classList.remove('hidden');
   requestAnimationFrame(() => {
     requestAnimationFrame(() => EL.favContainer.classList.add('open'));
   });
-  renderFavoritesPage();
+  await renderFavoritesPage();
+  requestAnimationFrame(() => {
+    EL.favItems.scrollLeft = Math.max(0, EL.favItems.scrollWidth - EL.favItems.clientWidth);
+    updateDrawerNavButtons(EL.favItems, EL.favPrev, EL.favNext);
+  });
 }
 export function closeFavoritesDrawer() { EL.favContainer.classList.remove('open'); setTimeout(() => !EL.favContainer.classList.contains('open') && EL.favContainer.classList.add('hidden'), 350); }
 
@@ -201,6 +320,20 @@ export async function openNotePanel(hashId) {
   EL.noteTextarea.focus();
 }
 export function closeNotePanel() { EL.notePanel.classList.remove('open'); setTimeout(() => !EL.notePanel.classList.contains('open') && EL.notePanel.classList.add('hidden'), 300); }
+export async function renderNoteHistory() {
+  currentNoteHistoryItems = await getNoteHistoryProjects();
+  EL.noteHistoryItems.innerHTML = currentNoteHistoryItems.length
+    ? currentNoteHistoryItems.map(item =>
+        `<button class="note-history-item" type="button" data-id="${esc(item.hash_id)}"><img src="${esc(item.cover?.smaller_square_image_url || item.imageUrl || '')}" alt=""><span>${esc(item.title)}</span></button>`
+      ).join('')
+    : '<div class="note-history-empty">No saved notes yet.</div>';
+}
+export async function openNoteHistory() {
+  await renderNoteHistory();
+  EL.noteHistoryPanel.classList.remove('hidden');
+  requestAnimationFrame(() => requestAnimationFrame(() => EL.noteHistoryPanel.classList.add('open')));
+}
+export function closeNoteHistory() { EL.noteHistoryPanel.classList.remove('open'); setTimeout(() => !EL.noteHistoryPanel.classList.contains('open') && EL.noteHistoryPanel.classList.add('hidden'), 260); }
 
 export async function openSettingsModal() {
   const s = await loadSettings();
@@ -292,7 +425,7 @@ async function downloadImage(url, title) {
 export function bindEvents(handlers) {
   const {
     onNext, onPrev, onImgNext, onImgPrev,
-    onHistoryItemClick, onFavoriteItemClick,
+    onHistoryItemClick, onFavoriteItemClick, onNoteHistoryItemClick,
     onAutoplayToggle, onFavoriteToggle, onPinToggle, onNoteOpen,
     onSettingsSave, onSettingsReset, onImportDone
   } = handlers;
@@ -304,39 +437,80 @@ export function bindEvents(handlers) {
 
   EL.historyOpenBtn.addEventListener('click', async () => { await openHistoryDrawer(); });
   EL.historyClose.addEventListener('click', closeHistoryDrawer);
-  EL.historyPrev.addEventListener('click', async () => { historyPageStart = Math.max(0, historyPageStart - PAGE_SIZE); renderHistoryPage(); });
+  EL.historyPrev.addEventListener('click', async () => {
+    scrollDrawerBy(EL.historyItems, -getDrawerStep(EL.historyItems));
+  });
   EL.historyNext.addEventListener('click', async () => {
-    const h = await getHistory();
-    historyPageStart = Math.min(Math.max(0, h.length - PAGE_SIZE), historyPageStart + PAGE_SIZE);
-    renderHistoryPage();
+    scrollDrawerBy(EL.historyItems, getDrawerStep(EL.historyItems));
   });
   EL.historyItems.addEventListener('click', e => {
+    if (suppressDrawerClick) return;
     const item = e.target.closest('.history-item[data-id]');
     if (item) { closeHistoryDrawer(); onHistoryItemClick(item.dataset.id); }
   });
 
   EL.favoritesOpenBtn.addEventListener('click', async () => { await openFavoritesDrawer(); });
   EL.favClose.addEventListener('click', closeFavoritesDrawer);
-  EL.favPrev.addEventListener('click', () => { favPageStart = Math.max(0, favPageStart - PAGE_SIZE); renderFavoritesPage(); });
+  EL.favPrev.addEventListener('click', () => {
+    scrollDrawerBy(EL.favItems, -getDrawerStep(EL.favItems));
+  });
   EL.favNext.addEventListener('click', async () => {
-    const { total } = await getFavoritesPage(0);
-    favPageStart = Math.min(Math.max(0, total - PAGE_SIZE), favPageStart + PAGE_SIZE);
-    renderFavoritesPage();
+    scrollDrawerBy(EL.favItems, getDrawerStep(EL.favItems));
   });
   EL.favItems.addEventListener('click', async e => {
+    if (suppressDrawerClick) return;
     const rm = e.target.closest('.fav-remove');
     if (rm) { e.stopPropagation(); await removeFavorite(rm.dataset.id); renderFavoritesPage(); return; }
     const item = e.target.closest('.history-item[data-id]');
     if (item) { closeFavoritesDrawer(); onFavoriteItemClick(item.dataset.id); }
   });
 
+  bindDrawerSwipe(EL.historyItems, {
+    onScroll: () => updateDrawerNavButtons(EL.historyItems, EL.historyPrev, EL.historyNext),
+    onTap: (target) => {
+      const item = target?.closest?.('.history-item[data-id]');
+      if (item) {
+        closeHistoryDrawer();
+        onHistoryItemClick(item.dataset.id);
+      }
+    }
+  });
+
+  bindDrawerSwipe(EL.favItems, {
+    onScroll: () => updateDrawerNavButtons(EL.favItems, EL.favPrev, EL.favNext),
+    onTap: async (target) => {
+      const rm = target?.closest?.('.fav-remove');
+      if (rm) {
+        await removeFavorite(rm.dataset.id);
+        renderFavoritesPage();
+        return;
+      }
+      const item = target?.closest?.('.history-item[data-id]');
+      if (item) {
+        closeFavoritesDrawer();
+        onFavoriteItemClick(item.dataset.id);
+      }
+    }
+  });
+
+  EL.historyItems.addEventListener('scroll', () => updateDrawerNavButtons(EL.historyItems, EL.historyPrev, EL.historyNext));
+  EL.favItems.addEventListener('scroll', () => updateDrawerNavButtons(EL.favItems, EL.favPrev, EL.favNext));
+
   EL.favoriteBtn.addEventListener('click', onFavoriteToggle);
   EL.pinBtn.addEventListener('click', onPinToggle);
 
   EL.noteBtn.addEventListener('click', onNoteOpen);
+  EL.noteHistoryBtn.addEventListener('click', openNoteHistory);
+  EL.noteHistoryClose.addEventListener('click', closeNoteHistory);
   EL.noteClose.addEventListener('click', closeNotePanel);
   EL.noteSave.addEventListener('click', async () => { if (!currentNoteHashId) return; await saveNote(currentNoteHashId, EL.noteTextarea.value); closeNotePanel(); showNoteToast(); });
   EL.noteDelete.addEventListener('click', async () => { if (!currentNoteHashId) return; await saveNote(currentNoteHashId, ''); closeNotePanel(); });
+  EL.noteHistoryItems.addEventListener('click', e => {
+    const item = e.target.closest('.note-history-item[data-id]');
+    if (!item) return;
+    openNotePanel(item.dataset.id);
+    onNoteHistoryItemClick?.(item.dataset.id);
+  });
 
   EL.autoplayBtn.addEventListener('click', onAutoplayToggle);
 
@@ -399,10 +573,10 @@ export function initClickOutside() {
     if (!EL.historyContainer.classList.contains('hidden') && !EL.historyContainer.contains(e.target) && e.target !== EL.historyOpenBtn) closeHistoryDrawer();
     if (!EL.favContainer.classList.contains('hidden') && !EL.favContainer.contains(e.target) && e.target !== EL.favoritesOpenBtn) closeFavoritesDrawer();
     if (!EL.notePanel.classList.contains('hidden') && !EL.notePanel.contains(e.target) && e.target !== EL.noteBtn) closeNotePanel();
+    if (!EL.noteHistoryPanel.classList.contains('hidden') && !EL.noteHistoryPanel.contains(e.target) && e.target !== EL.noteHistoryBtn) closeNoteHistory();
   });
 }
 
 function esc(str) {
   return String(str ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-
 }
