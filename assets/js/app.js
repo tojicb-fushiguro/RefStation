@@ -1,5 +1,9 @@
-/**
- * app.js — entry point
+/*
+ * RefStation
+ * Author: tojicb-fushiguro
+ * File: app.js
+ * Description: Main application controller.
+ * Handles startup flow, artwork loading, navigation, autoplay, timers, and app state coordination.
  */
 import { fetchRandomProject, fetchOfflineProject, getProjectImages } from './api.js';
 import {
@@ -302,3 +306,4 @@ function initKeyboardShortcuts() {
 }
 
 document.addEventListener('DOMContentLoaded', init);
+
