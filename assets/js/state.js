@@ -1,5 +1,9 @@
-/**
- * state.js — storage, history, settings, favorites, notes, pin, import/export
+/*
+ * RefStation
+ * Author: tojicb-fushiguro
+ * File: state.js
+ * Description: Local storage and persistence layer.
+ * Manages settings, favorites, history, notes, pinned artwork, and import/export data.
  */
 
 const HISTORY_MAX = 320;
@@ -216,3 +220,4 @@ export async function importAllDataReplace(payload) {
     pinned_artwork: payload.pinnedArtwork || null
   });
 }
+
