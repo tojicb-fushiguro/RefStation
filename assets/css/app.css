@@ -1,3 +1,10 @@
+/*
+  RefStation
+  Author: tojicb-fushiguro
+  File: app.css
+  Description: Main stylesheet for RefStation.
+  Notes: Controls layout, visual identity, panels, drawers, overlays, and UI motion.
+*/
 *,
 *::before,
 *::after {
@@ -1679,3 +1686,4 @@ body::after {
     min-width: calc(100vw - 24px);
   }
 }
+
