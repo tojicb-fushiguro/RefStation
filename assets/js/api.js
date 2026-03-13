@@ -1,3 +1,10 @@
+/*
+ * RefStation
+ * Author: tojicb-fushiguro
+ * File: app.js
+ * Description: Main application controller.
+ * Handles startup flow, artwork loading, navigation, autoplay, timers, and app state coordination.
+ */
 /**
  * api.js — fetch artwork from ArtStation; offline fallback.
  */
@@ -109,3 +116,4 @@ function normaliseOfflineItem(item, index) {
     offline: true,
   };
 }
+
