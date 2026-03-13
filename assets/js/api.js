@@ -1,12 +1,9 @@
 /*
  * RefStation
  * Author: tojicb-fushiguro
- * File: app.js
- * Description: Main application controller.
- * Handles startup flow, artwork loading, navigation, autoplay, timers, and app state coordination.
- */
-/**
- * api.js — fetch artwork from ArtStation; offline fallback.
+ * File: api.js
+ * Description: API and data normalization layer.
+ * Handles ArtStation requests, offline data loading, and project shaping for the UI.
  */
 
 const BASE        = 'https://www.artstation.com';
@@ -116,4 +113,5 @@ function normaliseOfflineItem(item, index) {
     offline: true,
   };
 }
+
 
