@@ -1,5 +1,9 @@
-/**
- * ui.js — DOM rendering and event handlers
+/*
+ * RefStation
+ * Author: tojicb-fushiguro
+ * File: ui.js
+ * Description: UI rendering and interaction layer.
+ * Handles DOM updates, drawers, note panels, controls, toasts, and view behavior.
  */
 import { fetchFilterOptions } from './api.js';
 import {
@@ -580,3 +584,4 @@ export function initClickOutside() {
 function esc(str) {
   return String(str ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
+
