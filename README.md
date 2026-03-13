@@ -303,12 +303,14 @@ RefStation/
 └── offline/
     └── offline.json
 
+```
+
 ## 👤 Author
 
 **tojicb-fushiguro**
 
 ---
-```
+
 ## 🙏 Inspiration
 
 RefStation is inspired by the broader idea of an art-first new tab experience, especially the kind of visual discovery flow popularized by tools like the ArtStation Discover extension.
@@ -359,4 +361,5 @@ There is no intent to sell, market, or monetize this project. If you are a right
 ## 🚉 RefStation Philosophy
 
 **RefStation** = daily inspiration + focused study flow + better new tabs
+
 ---
