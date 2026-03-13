@@ -1,15 +1,11 @@
 /**
- * RefStation
- * Author: tojicb-fushiguro
- */
-/**
  * app.js — entry point
  */
 import { fetchRandomProject, fetchOfflineProject, getProjectImages } from './api.js';
 import {
   loadSettings, buildFilterQuery, addToHistory, getHistory, nextOfflineIndex,
   addFavorite, removeFavorite, isFavorite, getFavorites,
-  getPinnedArtwork, setPinnedArtwork
+  getPinnedArtwork, setPinnedArtwork, getNoteHistoryProjects
 } from './state.js';
 import {
   renderProject, bindEvents, initIdleHandler, startClock,
@@ -50,6 +46,7 @@ async function init() {
     onImgPrev: handleImgPrev,
     onHistoryItemClick: handleHistoryItemClick,
     onFavoriteItemClick: handleFavoriteItemClick,
+    onNoteHistoryItemClick: handleNoteHistoryItemClick,
     onAutoplayToggle: handleAutoplayToggle,
     onFavoriteToggle: handleFavoriteToggle,
     onPinToggle: handlePinToggle,
@@ -197,6 +194,17 @@ async function handleFavoriteItemClick(hashId) {
 
   await displayProject(viewerList[viewerIndex]);
 }
+
+async function handleNoteHistoryItemClick(hashId) {
+  pauseAutoplay();
+  const noteItems = await getNoteHistoryProjects();
+  const project = noteItems.find(item => item.hash_id === hashId);
+  if (!project) return;
+  viewerMode = 'history';
+  viewerList = noteItems;
+  viewerIndex = noteItems.findIndex(item => item.hash_id === hashId);
+  await displayProject(project);
+}
 async function handleFavoriteToggle() {
   if (!currentProject) return;
   const already = await isFavorite(currentProject.hash_id);
@@ -292,6 +300,5 @@ function initKeyboardShortcuts() {
     if (k === 's') return EL.settingsBtn?.click();
   });
 }
-
 
 document.addEventListener('DOMContentLoaded', init);
